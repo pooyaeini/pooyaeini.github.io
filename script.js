@@ -4,27 +4,6 @@
 (function () {
   "use strict";
 
-  /* ---- Theme toggle (persisted) ---- */
-  var root = document.documentElement;
-  var toggle = document.getElementById("themeToggle");
-  var stored = null;
-  try { stored = localStorage.getItem("pe-theme"); } catch (e) {}
-  if (stored) root.setAttribute("data-theme", stored);
-
-  function currentTheme() {
-    var attr = root.getAttribute("data-theme");
-    if (attr) return attr;
-    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  }
-
-  if (toggle) {
-    toggle.addEventListener("click", function () {
-      var next = currentTheme() === "dark" ? "light" : "dark";
-      root.setAttribute("data-theme", next);
-      try { localStorage.setItem("pe-theme", next); } catch (e) {}
-    });
-  }
-
   /* ---- Publication filter ---- */
   var filterBtns = document.querySelectorAll(".pubfilter__btn");
   var pubs = document.querySelectorAll(".pub");
@@ -84,4 +63,72 @@
   /* ---- Footer year ---- */
   var yearEl = document.getElementById("year");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+  /* ---- Scroll-scrubbed background (assets/bg frame sequence) ---- */
+  var FRAME_COUNT = 241;
+  var canvas = document.getElementById("bgCanvas");
+  if (canvas && canvas.getContext) {
+    var ctx = canvas.getContext("2d");
+    var cache = new Array(FRAME_COUNT + 1);
+    var currentFrame = -1;
+    var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    function frameSrc(n) {
+      var padded = ("000" + n).slice(-3);
+      return "assets/bg/ezgif-frame-" + padded + ".jpg";
+    }
+
+    var FOCAL_X = 0.22; /* subject sits ~1/3 in from the left of each frame; keep it in view when cropping narrow/tall viewports */
+
+    function drawFrame(img) {
+      var w = canvas.width, h = canvas.height;
+      var scale = Math.max(w / img.width, h / img.height);
+      var dw = img.width * scale, dh = img.height * scale;
+      ctx.clearRect(0, 0, w, h);
+      ctx.drawImage(img, (w - dw) * FOCAL_X, (h - dh) / 2, dw, dh);
+    }
+
+    function loadFrame(n, draw) {
+      if (cache[n]) { if (draw) drawFrame(cache[n]); return; }
+      var img = new Image();
+      img.onload = function () { cache[n] = img; if (draw && n === currentFrame) drawFrame(img); };
+      img.src = frameSrc(n);
+    }
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      if (cache[currentFrame]) drawFrame(cache[currentFrame]);
+    }
+
+    function update() {
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      var fraction = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+      var frame = Math.min(FRAME_COUNT, Math.max(1, Math.round(fraction * (FRAME_COUNT - 1)) + 1));
+      if (frame === currentFrame) return;
+      currentFrame = frame;
+      loadFrame(frame, true);
+      for (var i = 1; i <= 2; i++) {
+        if (frame + i <= FRAME_COUNT) loadFrame(frame + i, false);
+        if (frame - i >= 1) loadFrame(frame - i, false);
+      }
+    }
+
+    var ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () { update(); ticking = false; });
+    }
+
+    resize();
+    window.addEventListener("resize", resize);
+    if (!reduceMotion) {
+      window.addEventListener("scroll", onScroll, { passive: true });
+      update();
+    } else {
+      currentFrame = 1;
+      loadFrame(1, true);
+    }
+  }
 })();
