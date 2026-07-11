@@ -44,6 +44,7 @@ body {
   width: 100vw; height: 100vh;
   background: var(--navy-deep);
 }
+.bg-video { position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .page { position: relative; z-index: 1; }
 
 a { color: var(--accent); text-decoration: none; }

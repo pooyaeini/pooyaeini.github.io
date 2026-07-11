@@ -64,54 +64,37 @@
   var yearEl = document.getElementById("year");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-  /* ---- Scroll-scrubbed background (assets/bg frame sequence) ---- */
-  var FRAME_COUNT = 241;
+  /* ---- Scroll-scrubbed background (video, seeked onto canvas) ---- */
   var canvas = document.getElementById("bgCanvas");
-  if (canvas && canvas.getContext) {
+  var video = document.getElementById("bgVideo");
+  if (canvas && canvas.getContext && video) {
+    if (location.protocol === "file:") {
+      console.warn("Background video scrubbing needs a real HTTP server (video seeking doesn't work over file://). Run a local server, or check the page on GitHub Pages.");
+    }
     var ctx = canvas.getContext("2d");
-    var cache = new Array(FRAME_COUNT + 1);
-    var currentFrame = -1;
     var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    function frameSrc(n) {
-      var padded = ("000" + n).slice(-3);
-      return "assets/bg/ezgif-frame-" + padded + ".jpg";
-    }
-
     var FOCAL_X = 0.22; /* subject sits ~1/3 in from the left of each frame; keep it in view when cropping narrow/tall viewports */
+    var ready = false;
 
-    function drawFrame(img) {
+    function drawFrame() {
       var w = canvas.width, h = canvas.height;
-      var scale = Math.max(w / img.width, h / img.height);
-      var dw = img.width * scale, dh = img.height * scale;
+      var scale = Math.max(w / video.videoWidth, h / video.videoHeight);
+      var dw = video.videoWidth * scale, dh = video.videoHeight * scale;
       ctx.clearRect(0, 0, w, h);
-      ctx.drawImage(img, (w - dw) * FOCAL_X, (h - dh) / 2, dw, dh);
-    }
-
-    function loadFrame(n, draw) {
-      if (cache[n]) { if (draw) drawFrame(cache[n]); return; }
-      var img = new Image();
-      img.onload = function () { cache[n] = img; if (draw && n === currentFrame) drawFrame(img); };
-      img.src = frameSrc(n);
+      ctx.drawImage(video, (w - dw) * FOCAL_X, (h - dh) / 2, dw, dh);
     }
 
     function resize() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      if (cache[currentFrame]) drawFrame(cache[currentFrame]);
+      if (ready) drawFrame();
     }
 
     function update() {
+      if (!ready) return;
       var max = document.documentElement.scrollHeight - window.innerHeight;
       var fraction = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
-      var frame = Math.min(FRAME_COUNT, Math.max(1, Math.round(fraction * (FRAME_COUNT - 1)) + 1));
-      if (frame === currentFrame) return;
-      currentFrame = frame;
-      loadFrame(frame, true);
-      for (var i = 1; i <= 2; i++) {
-        if (frame + i <= FRAME_COUNT) loadFrame(frame + i, false);
-        if (frame - i >= 1) loadFrame(frame - i, false);
-      }
+      video.currentTime = fraction * video.duration;
     }
 
     var ticking = false;
@@ -121,14 +104,16 @@
       requestAnimationFrame(function () { update(); ticking = false; });
     }
 
-    resize();
-    window.addEventListener("resize", resize);
-    if (!reduceMotion) {
-      window.addEventListener("scroll", onScroll, { passive: true });
+    video.addEventListener("seeked", drawFrame);
+    video.addEventListener("loadeddata", drawFrame);
+    video.addEventListener("loadedmetadata", function () {
+      ready = true;
+      resize();
       update();
-    } else {
-      currentFrame = 1;
-      loadFrame(1, true);
-    }
+    });
+
+    window.addEventListener("resize", resize);
+    resize();
+    if (!reduceMotion) window.addEventListener("scroll", onScroll, { passive: true });
   }
 })();
