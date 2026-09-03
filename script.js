@@ -74,18 +74,24 @@
     var ready = false;
     var targetTime = 0;
     var ticking = false;
+    var objectUrl = null;
+    var FRAME_RATE = 24;
+    var MAX_SEEK_STEP = 0.25;
 
     function updateTarget() {
       if (!ready) return;
       var max = document.documentElement.scrollHeight - window.innerHeight;
       var fraction = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
-      targetTime = fraction * video.duration;
+      targetTime = Math.round(fraction * video.duration * FRAME_RATE) / FRAME_RATE;
       seekToTarget();
     }
 
     function seekToTarget() {
-      if (!ready || video.seeking || Math.abs(video.currentTime - targetTime) < 0.025) return;
-      video.currentTime = targetTime;
+      if (!ready || video.seeking) return;
+      var delta = targetTime - video.currentTime;
+      if (Math.abs(delta) < 1 / (FRAME_RATE * 2)) return;
+      var step = Math.max(-MAX_SEEK_STEP, Math.min(MAX_SEEK_STEP, delta));
+      video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + step));
     }
 
     function onScroll() {
@@ -94,16 +100,37 @@
       requestAnimationFrame(function () { updateTarget(); ticking = false; });
     }
 
-    video.addEventListener("seeked", seekToTarget);
+    video.addEventListener("seeked", function () {
+      requestAnimationFrame(seekToTarget);
+    });
     video.addEventListener("loadedmetadata", function () {
       ready = true;
       updateTarget();
     });
 
-    /* Keep the video off the critical loading path, then fetch it once the page is usable. */
+    /* Download once after initial page load, then scrub the in-memory copy without network stalls. */
     window.addEventListener("load", function () {
-      video.preload = "auto";
-      video.load();
+      var source = video.getAttribute("data-src");
+      fetch(source, { cache: "force-cache" })
+        .then(function (response) {
+          if (!response.ok) throw new Error("Background video request failed");
+          return response.blob();
+        })
+        .then(function (blob) {
+          objectUrl = URL.createObjectURL(blob);
+          video.src = objectUrl;
+          video.load();
+        })
+        .catch(function () {
+          /* Retain a normal streamed-video fallback if Blob loading is unavailable. */
+          video.src = source;
+          video.preload = "auto";
+          video.load();
+        });
+    }, { once: true });
+
+    window.addEventListener("pagehide", function () {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
     }, { once: true });
 
     if (!reduceMotion) window.addEventListener("scroll", onScroll, { passive: true });
