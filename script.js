@@ -21,7 +21,7 @@
   });
 
   /* ---- Scroll reveal ---- */
-  var revealTargets = document.querySelectorAll(".section, .card, .pub, .tl__item");
+  var revealTargets = document.querySelectorAll(".section, .card, .tl__item");
   if ("IntersectionObserver" in window && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     revealTargets.forEach(function (el) { el.setAttribute("data-reveal", ""); });
     var io = new IntersectionObserver(function (entries) {
@@ -64,56 +64,48 @@
   var yearEl = document.getElementById("year");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-  /* ---- Scroll-scrubbed background (video, seeked onto canvas) ---- */
-  var canvas = document.getElementById("bgCanvas");
+  /* ---- Scroll-scrubbed background (native video rendering) ---- */
   var video = document.getElementById("bgVideo");
-  if (canvas && canvas.getContext && video) {
+  if (video) {
     if (location.protocol === "file:") {
       console.warn("Background video scrubbing needs a real HTTP server (video seeking doesn't work over file://). Run a local server, or check the page on GitHub Pages.");
     }
-    var ctx = canvas.getContext("2d");
     var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var FOCAL_X = 0.22; /* subject sits ~1/3 in from the left of each frame; keep it in view when cropping narrow/tall viewports */
     var ready = false;
+    var targetTime = 0;
+    var ticking = false;
 
-    function drawFrame() {
-      var w = canvas.width, h = canvas.height;
-      var scale = Math.max(w / video.videoWidth, h / video.videoHeight);
-      var dw = video.videoWidth * scale, dh = video.videoHeight * scale;
-      ctx.clearRect(0, 0, w, h);
-      ctx.drawImage(video, (w - dw) * FOCAL_X, (h - dh) / 2, dw, dh);
-    }
-
-    function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      if (ready) drawFrame();
-    }
-
-    function update() {
+    function updateTarget() {
       if (!ready) return;
       var max = document.documentElement.scrollHeight - window.innerHeight;
       var fraction = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
-      video.currentTime = fraction * video.duration;
+      targetTime = fraction * video.duration;
+      seekToTarget();
     }
 
-    var ticking = false;
+    function seekToTarget() {
+      if (!ready || video.seeking || Math.abs(video.currentTime - targetTime) < 0.025) return;
+      video.currentTime = targetTime;
+    }
+
     function onScroll() {
       if (ticking) return;
       ticking = true;
-      requestAnimationFrame(function () { update(); ticking = false; });
+      requestAnimationFrame(function () { updateTarget(); ticking = false; });
     }
 
-    video.addEventListener("seeked", drawFrame);
-    video.addEventListener("loadeddata", drawFrame);
+    video.addEventListener("seeked", seekToTarget);
     video.addEventListener("loadedmetadata", function () {
       ready = true;
-      resize();
-      update();
+      updateTarget();
     });
 
-    window.addEventListener("resize", resize);
-    resize();
+    /* Keep the video off the critical loading path, then fetch it once the page is usable. */
+    window.addEventListener("load", function () {
+      video.preload = "auto";
+      video.load();
+    }, { once: true });
+
     if (!reduceMotion) window.addEventListener("scroll", onScroll, { passive: true });
   }
 })();

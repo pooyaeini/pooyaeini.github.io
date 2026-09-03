@@ -19,8 +19,8 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230e2a47'/%3E%3Ctext x='50' y='68' font-size='52' font-family='Georgia,serif' fill='%234fd1c5' text-anchor='middle'%3EPE%3C/text%3E%3C/svg%3E" />
 </head>
 <body>
-  <canvas id="bgCanvas" class="bg-canvas" aria-hidden="true"></canvas>
-  <video id="bgVideo" class="bg-video" src="assets/bg/scroll-bg.mp4" muted playsinline preload="auto" aria-hidden="true"></video>
+  <video id="bgVideo" class="bg-video" src="assets/bg/scroll-bg.mp4"
+         poster="assets/bg/ezgif-frame-001.jpg" muted playsinline preload="metadata" aria-hidden="true"></video>
   <div class="page">
   <a class="skip-link" href="#main">Skip to content</a>
 
@@ -85,7 +85,7 @@
        <figure class="hero__portrait">
          <div class="hero__portrait-frame">
            <img src="assets/img/portrait.jpg" width="760" height="760"
-                alt="Portrait of Dr. Pooya Eini" loading="eager" />
+                alt="Portrait of Dr. Pooya Eini" loading="eager" fetchpriority="high" decoding="async" />
          </div>
          <figcaption class="hero__portrait-cap">Pooya Eini, MD</figcaption>
        </figure>
@@ -130,7 +130,7 @@
         </div>
         <aside class="about__card">
           <figure class="about__photo">
-            <img src="assets/img/portrait-or.jpg" alt="Dr. Pooya Eini in a clinical setting" loading="lazy" />
+            <img src="assets/img/portrait-or.jpg" alt="Dr. Pooya Eini in a clinical setting" loading="lazy" decoding="async" />
           </figure>
           <h3 class="about__card-title">Core Research Skills</h3>
           <ul class="taglist">
@@ -156,7 +156,7 @@
       </div>
       <div class="cards">
         <article class="card">
-          <div class="card__media"><img src="assets/img/fig-cardiac.jpg" alt="AI-assisted cardiac imaging visualization" loading="lazy" /></div>
+          <div class="card__media"><img src="assets/img/fig-cardiac.jpg" alt="AI-assisted cardiac imaging visualization" loading="lazy" decoding="async" /></div>
           <div class="card__body">
             <h3 class="card__title">Cardiac Imaging AI</h3>
             <p class="card__text">
@@ -166,7 +166,7 @@
           </div>
         </article>
         <article class="card">
-          <div class="card__media"><img src="assets/img/fig-risk.jpg" alt="Cardiovascular risk modeling visualization" loading="lazy" /></div>
+          <div class="card__media"><img src="assets/img/fig-risk.jpg" alt="Cardiovascular risk modeling visualization" loading="lazy" decoding="async" /></div>
           <div class="card__body">
             <h3 class="card__title">Risk Prediction Modeling</h3>
             <p class="card__text">
@@ -176,7 +176,7 @@
           </div>
         </article>
         <article class="card">
-          <div class="card__media"><img src="assets/img/fig-eval.jpg" alt="Machine learning model evaluation visualization" loading="lazy" /></div>
+          <div class="card__media"><img src="assets/img/fig-eval.jpg" alt="Machine learning model evaluation visualization" loading="lazy" decoding="async" /></div>
           <div class="card__body">
             <h3 class="card__title">ML Model Evaluation</h3>
             <p class="card__text">
@@ -186,7 +186,7 @@
           </div>
         </article>
         <article class="card">
-          <div class="card__media"><img src="assets/img/fig-evidence.jpg" alt="Evidence synthesis and meta-analysis visualization" loading="lazy" /></div>
+          <div class="card__media"><img src="assets/img/fig-evidence.jpg" alt="Evidence synthesis and meta-analysis visualization" loading="lazy" decoding="async" /></div>
           <div class="card__body">
             <h3 class="card__title">Evidence Synthesis</h3>
             <p class="card__text">

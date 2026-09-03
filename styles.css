@@ -39,12 +39,15 @@ body {
 }
 
 /* ---------- SCROLL-SCRUBBED BACKGROUND ---------- */
-.bg-canvas {
+.bg-video {
   position: fixed; inset: 0; z-index: -1;
   width: 100vw; height: 100vh;
+  object-fit: cover;
+  object-position: 22% center;
   background: var(--navy-deep);
+  pointer-events: none;
+  transform: translateZ(0);
 }
-.bg-video { position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .page { position: relative; z-index: 1; }
 
 a { color: var(--accent); text-decoration: none; }
@@ -188,9 +191,10 @@ a:hover { text-decoration: underline; }
   max-width: var(--maxw); margin: 0 auto;
   padding: clamp(3.5rem, 8vw, 6rem) 1.5rem;
   background: color-mix(in srgb, var(--bg) 65%, transparent);
-  backdrop-filter: blur(3px);
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
 }
-.section--tint { max-width: none; background: color-mix(in srgb, var(--bg-tint) 65%, transparent); backdrop-filter: blur(3px); border-block: 1px solid var(--line); }
+.section--tint { max-width: none; background: color-mix(in srgb, var(--bg-tint) 65%, transparent); border-block: 1px solid var(--line); }
 .section--tint > * { max-width: var(--maxw); margin-inline: auto; }
 .section__head { margin-bottom: 2.8rem; }
 .section__kicker {
@@ -317,7 +321,6 @@ a:hover { text-decoration: underline; }
 /* ---------- CONTACT ---------- */
 .section--contact {
   background: linear-gradient(160deg, color-mix(in srgb, var(--navy-deep) 60%, transparent), color-mix(in srgb, var(--navy) 52%, transparent) 60%, color-mix(in srgb, #113a5c 40%, transparent));
-  backdrop-filter: blur(3px);
   color: #eef4fb; max-width: none; margin-top: 0;
 }
 .contact { max-width: var(--maxw); margin: 0 auto; text-align: center; }
