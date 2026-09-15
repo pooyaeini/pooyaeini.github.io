@@ -1,5 +1,9 @@
 # Pooya Eini — Vercel edition
 
+Production: https://pooya-eini.vercel.app
+
+Published successfully with the Vercel CLI to project `aizzx/pooya-eini`. The live page, CSS, JavaScript, heart artwork, and CV were verified over HTTPS. Automatic GitHub integration was not connected: Vercel rejected the repository connection during setup. Connect the repository in the project's Git settings and set `vercel-redesign` as the production branch before relying on push-to-deploy. Until then, publish updates with `npx vercel --prod` from this checkout.
+
 ## Publish
 
 Import `pooyaeini/pooyaeini.github.io` into Vercel and select the `vercel-redesign` branch as the production branch. Use the repository root, framework **Other**, build command `node build.mjs`, and output directory `dist`. No environment variables or external services are required.
