@@ -1,0 +1,9 @@
+{
+  "name": "pooya-eini-cardiovascular-portfolio",
+  "version": "2.0.0",
+  "private": true,
+  "scripts": {
+    "build": "node build.mjs",
+    "check": "node --check experience.js && node --check heart.js && node build.mjs"
+  }
+}

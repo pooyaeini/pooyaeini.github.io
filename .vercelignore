@@ -1,0 +1,11 @@
+.git
+.claude
+node_modules
+dist
+assets/bg/*
+!assets/bg/ezgif-frame-001.jpg
+script.js
+styles.css
+publish.ps1
+README.md
+DEPLOYMENT.md
