@@ -112,8 +112,14 @@
       void main() {
         float phase = smoothstep(0.0, 3.0, uJourney);
         vec3 p = aPosition;
-        float beat = 1.0 + 0.003 * sin(uTime * 4.8);
-        p *= beat;
+        float vessel = step(0.5, aKind);
+        float cycle = fract(uTime * 1.2);
+        float contraction = smoothstep(0.00, 0.055, cycle) * (1.0 - smoothstep(0.055, 0.20, cycle));
+        float rebound = smoothstep(0.18, 0.24, cycle) * (1.0 - smoothstep(0.24, 0.36, cycle));
+        float pump = (contraction * 0.035 + rebound * 0.014) * (1.0 - vessel);
+        p.x *= 1.0 + pump * 0.82;
+        p.y *= 1.0 + pump;
+        p.z *= 1.0 + pump * 0.55;
         p.y += uJourney;
         // Orbit around the portion of the network currently in view, not the heart's origin.
         float angle = uPointer * 0.26 + sin(uJourney * 0.42) * phase * 0.36 - 0.04;
@@ -125,8 +131,11 @@
         p.xy *= zoom;
         float perspective = 3.6 / (3.6 - p.z);
         gl_Position = vec4(uOrigin + vec2(p.x / uAspect, p.y) * perspective * uScale, -p.z * 0.15, 1.0);
-        float flowPulse = 0.5 + 0.5 * sin(-aPosition.y * 5.0 - uTime * 2.8);
-        gl_PointSize = uSize * perspective * mix(1.0 + 0.15 * aSeed, 1.55 + 0.28 * flowPulse, aKind);
+        float flowDirection = mix(1.0, -1.0, step(1.5, aKind));
+        float flowPulse = 0.5 + 0.5 * sin((-aPosition.y) * 5.0 * flowDirection - uTime * 2.8);
+        float heartSize = (1.0 + 0.15 * aSeed) * (1.0 + pump * 5.0);
+        float vesselSize = 1.55 + 0.28 * flowPulse;
+        gl_PointSize = uSize * perspective * mix(heartSize, vesselSize, vessel);
         vColor = aColor;
         vKind = aKind;
         vDepth = p.z;
@@ -144,7 +153,9 @@
         float sphere = 1.0 - smoothstep(0.08, 0.5, d) * 0.48;
         float sparkle = 0.84 + 0.30 * fract(sin(vSeed * 91.73) * 43758.55);
         float depthLight = 0.90 + 0.16 * clamp(vDepth + 0.5, 0.0, 1.0);
-        float flow = pow(max(0.0, cos(vPath * 5.0 - uTime * 2.8)), 24.0) * vKind;
+        float vessel = step(0.5, vKind);
+        float flowDirection = mix(1.0, -1.0, step(1.5, vKind));
+        float flow = pow(max(0.0, cos(vPath * 5.0 * flowDirection - uTime * 2.8)), 24.0) * vessel;
         vec3 lit = vColor * sphere * sparkle * depthLight * (1.0 + flow * 1.15);
         lit += vec3(0.20, 0.12, 0.09) * flow;
         gl_FragColor = vec4(lit, 1.0);
@@ -196,7 +207,7 @@
           const color = blue ? [.22, .65, .98] : [1.0, .32, .22];
           const seed = (t * 37 + k / rings * 13) % 1;
           surface.push([center[0] - dy / norm * side * r, center[1] + dx / norm * side * r,
-            center[2] + front * r, ...color.map(v => v * light), seed, 1]);
+            center[2] + front * r, ...color.map(v => v * light), seed, blue ? 2 : 1]);
         }
       }
       // The same spherical particle material is used for heart and vessels.
@@ -212,9 +223,10 @@
         branch(end, direction * .65 - .48, length * .72, radius * .58, depth - 1, blue);
       }
     }
-    // Aortic arch continuation bends around the heart into the descending trunk.
-    tube([.03,.56,.26], [.62,.62,.12], [.67,-.95,.04], [.32,-2,.04], .075,.065);
-    tube([-.28,.62,.20], [-.68,.45,.06], [-.58,-1.1,0], [-.28,-2,0], .065,.055,true);
+    // Both main vessels begin behind the heart, remain depth-occluded at the roots,
+    // then curve around its sides into the descending arterial and venous trunks.
+    tube([.10,.42,-.20], [.36,.45,-.30], [.53,-.68,-.16], [.30,-2,.04], .090,.070);
+    tube([-.08,.36,-.24], [-.36,.43,-.32], [-.52,-.72,-.18], [-.30,-2,.02], .084,.065,true);
     for (const blue of [false, true]) {
       const sign = blue ? -1 : 1;
       for (let level = 0; level < 5; level++) {
