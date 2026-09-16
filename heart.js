@@ -108,7 +108,7 @@
       uniform mediump float uTime;
       uniform vec2 uOrigin;
       varying mediump vec3 vColor;
-      varying mediump float vKind, vDepth, vPath;
+      varying mediump float vKind, vDepth, vPath, vSeed;
       void main() {
         float phase = smoothstep(0.0, 3.0, uJourney);
         vec3 p = aPosition;
@@ -125,29 +125,29 @@
         p.xy *= zoom;
         float perspective = 3.6 / (3.6 - p.z);
         gl_Position = vec4(uOrigin + vec2(p.x / uAspect, p.y) * perspective * uScale, -p.z * 0.15, 1.0);
-        gl_PointSize = uSize * perspective * mix(1.0 + 0.15 * aSeed, 1.35, aKind);
+        float flowPulse = 0.5 + 0.5 * sin(-aPosition.y * 5.0 - uTime * 2.8);
+        gl_PointSize = uSize * perspective * mix(1.0 + 0.15 * aSeed, 1.55 + 0.28 * flowPulse, aKind);
         vColor = aColor;
         vKind = aKind;
         vDepth = p.z;
         vPath = -aPosition.y;
+        vSeed = aSeed;
       }`;
     const fragment = `
       precision mediump float;
       uniform mediump float uTime;
       varying mediump vec3 vColor;
-      varying mediump float vKind, vDepth, vPath;
+      varying mediump float vKind, vDepth, vPath, vSeed;
       void main() {
-        if (vKind < 0.5) {
-          float d = length(gl_PointCoord - vec2(0.5));
-          if (d > 0.5) discard;
-          gl_FragColor = vec4(vColor * (1.0 - smoothstep(0.12, 0.5, d) * 0.4), 1.0);
-        } else {
-          float band = pow(max(0.0, cos(vPath * 4.5 - uTime * 2.8)), 22.0);
-          float rim = 0.90 + 0.14 * clamp(vDepth + 0.5, 0.0, 1.0);
-          vec3 lit = vColor * rim * (1.0 + band * 0.8);
-          lit += vec3(0.23, 0.16, 0.13) * band;
-          gl_FragColor = vec4(lit, 1.0);
-        }
+        float d = length(gl_PointCoord - vec2(0.5));
+        if (d > 0.5) discard;
+        float sphere = 1.0 - smoothstep(0.08, 0.5, d) * 0.48;
+        float sparkle = 0.84 + 0.30 * fract(sin(vSeed * 91.73) * 43758.55);
+        float depthLight = 0.90 + 0.16 * clamp(vDepth + 0.5, 0.0, 1.0);
+        float flow = pow(max(0.0, cos(vPath * 5.0 - uTime * 2.8)), 24.0) * vKind;
+        vec3 lit = vColor * sphere * sparkle * depthLight * (1.0 + flow * 1.15);
+        lit += vec3(0.20, 0.12, 0.09) * flow;
+        gl_FragColor = vec4(lit, 1.0);
       }`;
     function shader(type, source) {
       const item = gl.createShader(type); gl.shaderSource(item, source); gl.compileShader(item);
@@ -178,7 +178,6 @@
         red ? g * .85 : g * .95, red ? b * .85 : Math.min(1, b * 1.13), seed, 0);
     }
     // Connected cubic tubes. Radius decreases at each junction, from aorta to microvessels.
-    const heartCount = vertices.length / 8;
     const rings = stride === 2 ? 8 : 12;
     function tube(a, b, c, d, radius, endRadius, blue = false) {
       const length = Math.hypot(...d.map((v, i) => v - a[i]));
@@ -193,18 +192,15 @@
         const r = Math.max(.0035, (radius + (endRadius - radius) * t) * 1.65);
         for (let k = 0; k < rings; k++) {
           const theta = k / rings * Math.PI * 2, side = Math.cos(theta), front = Math.sin(theta);
-          const light = .22 + .68 * Math.max(0, front * .85 - side * .5) + .42 * Math.pow(Math.max(0, front * .95 - side * .3), 18);
+          const light = .48 + .48 * Math.max(0, front * .85 - side * .5);
           const color = blue ? [.22, .65, .98] : [1.0, .32, .22];
+          const seed = (t * 37 + k / rings * 13) % 1;
           surface.push([center[0] - dy / norm * side * r, center[1] + dx / norm * side * r,
-            center[2] + front * r, ...color.map(v => v * light), t, 1]);
+            center[2] + front * r, ...color.map(v => v * light), seed, 1]);
         }
       }
-      // A connected, shaded surface instead of isolated dots.
-      for (let j = 0; j < samples; j++) for (let k = 0; k < rings; k++) {
-        const a0 = j * rings + k, a1 = j * rings + (k + 1) % rings;
-        const b0 = a0 + rings, b1 = a1 + rings;
-        for (const index of [a0, b0, a1, a1, b0, b1]) vertices.push(...surface[index]);
-      }
+      // The same spherical particle material is used for heart and vessels.
+      for (const point of surface) vertices.push(...point);
     }
     function branch(start, direction, length, radius, depth, blue) {
       const end = [start[0] + direction * length * .55, start[1] - length, start[2] + (blue ? -.14 : .14) * length];
@@ -264,8 +260,7 @@
         gl.uniform2f(uniforms.uOrigin, (origin.x + (destination - origin.x) * phase) * 2 - 1,
           1 - (origin.y + (.5 - origin.y) * phase) * 2);
         gl.uniform1f(uniforms.uSize, Math.max(1.2, origin.height / 320 * stride * .78) * pixelRatio);
-        gl.drawArrays(gl.POINTS, 0, heartCount);
-        gl.drawArrays(gl.TRIANGLES, heartCount, data.length / 8 - heartCount);
+        gl.drawArrays(gl.POINTS, 0, data.length / 8);
       }
     };
   }
