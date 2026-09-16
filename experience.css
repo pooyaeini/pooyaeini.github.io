@@ -1,4 +1,12 @@
 /* Pooya Eini — cardiovascular research. Local fonts, no render-blocking services. */
+#heart-canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0}
+.vessel-ready #heart-canvas{opacity:1}
+.page{position:relative;z-index:1}
+.vessel-ready .hero{background:transparent}
+.vessel-ready .section{background:linear-gradient(90deg,#08090b55,#08090bc2 30%,#08090bc2 70%,#08090b55)}
+.vessel-ready #research{background-color:#10111455}
+.vessel-ready #publications{background-color:#0b0c0e55}
+.vessel-ready .section--contact{background:linear-gradient(#10111485,#101114cc)}
 :root{color-scheme:dark;--bg:#08090b;--surface:#101114;--ink:#f4f1ed;--muted:#a5a6aa;--line:#27282d;--accent:#f07869;--max:1280px;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-synthesis:none}
 *{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth;scroll-padding-top:90px}body{background:var(--bg);color:var(--ink);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}button{font:inherit;color:inherit;cursor:pointer}a,button{-webkit-tap-highlight-color:transparent}button:disabled{cursor:default}button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:6px}::selection{background:#823d35;color:#fff}img{max-width:100%;display:block}strong{font-weight:600}.sr-only,.skip-link:not(:focus){position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}.skip-link:focus{position:fixed;top:10px;left:10px;z-index:1000;padding:12px 20px;background:var(--ink);color:var(--bg)}
 .nav{height:82px;position:sticky;top:0;z-index:50;background:#08090bf5;border-bottom:1px solid #ffffff0c}.nav__inner{max-width:1440px;margin:auto;height:100%;padding:0 5%;display:flex;align-items:center;justify-content:space-between;gap:24px}.nav__brand{display:flex;align-items:center;gap:16px}.nav__brand-mark{font-size:31px;font-weight:600;letter-spacing:-3px;line-height:1}.nav__brand-mark span{color:var(--accent)}.nav__brand-text{font-size:14px;font-weight:550;letter-spacing:-.02em}.nav__brand-text small{color:var(--muted);margin-left:5px;font-size:10px}.nav__links{display:flex;gap:30px;align-items:center}.nav__links a{font-size:13px;color:#b8b9bc;transition:color .2s}.nav__links a:hover,.nav__links a[aria-current]{color:var(--ink)}.nav__links a:last-child{border:1px solid #44454a;border-radius:30px;padding:8px 18px;color:var(--ink)}.menu-toggle{display:none}

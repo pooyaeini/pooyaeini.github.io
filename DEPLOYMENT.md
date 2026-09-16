@@ -20,7 +20,7 @@ Alternatively, from this directory run `npx vercel login`, then `npx vercel --pr
 
 The build has no third-party runtime dependencies. It packages only explicitly selected public files. The old MP4, source image sequence, and obsolete scripts are retained in source control but excluded from deployment.
 
-The scene renders only while the introductory section is visible and the page is active. Pixel density is capped at 1.5 and phones use fewer particles. Visitors can pause motion. Reduced-motion preferences and unavailable WebGL use the original static heart artwork. Content remains usable without JavaScript.
+The scene connects the original heart relief to branching arterial and venous particle tubes. Scroll position moves the camera from the heart to main vessels and then finer branches behind the content. This is an artistic vascular network, not a diagnostic anatomical model. Below the heart, rendering stops when scroll interpolation settles; hidden tabs do not animate. Pixel density is capped at 1.5 and phones use fewer particles. Visitors can pause motion. Reduced-motion preferences and unavailable WebGL use the original static heart artwork. Content remains usable without JavaScript.
 
 Metrics supplied September 2026: citations 300+, h-index 10+, articles 65+. The previously supplied i10-index remains 14; these values do not automatically synchronize with Google Scholar.
 
