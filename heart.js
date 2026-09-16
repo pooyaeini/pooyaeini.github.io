@@ -11,6 +11,8 @@
   const second = document.querySelector('.hero__second');
   const bar = document.querySelector('.stage-progress span');
   const toggle = document.querySelector('.motion-toggle');
+  const controls = document.querySelector('.vascular-controls');
+  controls.append(toggle);
   const preference = matchMedia('(prefers-reduced-motion: reduce)');
   let renderer = null, paused = preference.matches, visible = true;
   let frame = 0, previous = 0, progress = 0, target = 0, rotation = 0, pointer = 0;
@@ -69,6 +71,8 @@
   function tick(now) {
     frame = 0;
     if (paused || !visible || document.hidden || !renderer) return;
+    const moving = Math.abs(journeyTarget - journey) > .008 || Math.abs(pointer - rotation) > .008;
+    if (previous && now - previous < 1000 / (moving ? 60 : 30)) { requestFrame(); return; }
     const elapsed = Math.min((now - (previous || now)) / 1000, .05);
     previous = now; clock += elapsed;
     const blend = 1 - Math.exp(-elapsed * 9);
@@ -77,8 +81,12 @@
     rotation += (pointer - rotation) * blend;
     setText(progress);
     renderer.draw(progress, clock, rotation, journey);
-    // At rest below the heart, leave the already rendered frame on screen.
-    if (journey < 1 || Math.abs(journeyTarget - journey) > .002 || Math.abs(target - progress) > .002 || Math.abs(pointer - rotation) > .002) requestFrame();
+    const chapter = journey < 1.8 ? 0 : journey < 8.1 ? 1 : 2;
+    controls.querySelectorAll('a').forEach((link, index) => {
+      if (index === chapter) link.setAttribute('aria-current', 'step');
+      else link.removeAttribute('aria-current');
+    });
+    requestFrame();
   }
   function fallback() {
     if (frame) cancelAnimationFrame(frame);
@@ -96,33 +104,50 @@
       attribute vec3 aPosition;
       attribute vec3 aColor;
       attribute float aSeed, aKind;
-      uniform float uProgress, uTime, uPointer, uAspect, uSize, uJourney, uScale;
+      uniform float uProgress, uPointer, uAspect, uSize, uJourney, uScale;
+      uniform mediump float uTime;
       uniform vec2 uOrigin;
-      varying vec3 vColor;
+      varying mediump vec3 vColor;
+      varying mediump float vKind, vDepth, vPath;
       void main() {
         float phase = smoothstep(0.0, 3.0, uJourney);
         vec3 p = aPosition;
         float beat = 1.0 + 0.003 * sin(uTime * 4.8);
         p *= beat;
-        float angle = (uPointer * 0.10 - 0.04) * (1.0 - phase);
-        p.xz = mat2(cos(angle), -sin(angle), sin(angle), cos(angle)) * p.xz;
         p.y += uJourney;
-        float zoom = 1.0 + smoothstep(7.0, 15.0, uJourney) * 0.45;
+        // Orbit around the portion of the network currently in view, not the heart's origin.
+        float angle = uPointer * 0.26 + sin(uJourney * 0.42) * phase * 0.36 - 0.04;
+        p.xz = mat2(cos(angle), -sin(angle), sin(angle), cos(angle)) * p.xz;
+        float bank = sin(uJourney * 0.48) * phase * 0.12;
+        p.xy = mat2(cos(bank), -sin(bank), sin(bank), cos(bank)) * p.xy;
+        float zoom = 1.0 + smoothstep(0.3, 2.7, uJourney) * 0.28
+          + smoothstep(8.0, 15.0, uJourney) * 0.40;
         p.xy *= zoom;
         float perspective = 3.6 / (3.6 - p.z);
-        gl_Position = vec4(uOrigin + vec2(p.x / uAspect, p.y) * perspective * uScale, p.z * 0.15, 1.0);
+        gl_Position = vec4(uOrigin + vec2(p.x / uAspect, p.y) * perspective * uScale, -p.z * 0.15, 1.0);
         gl_PointSize = uSize * perspective * mix(1.0 + 0.15 * aSeed, 1.35, aKind);
-        float flow = 0.9 + 0.1 * sin(aPosition.y * 5.0 + uTime * 2.0);
-        vColor = aColor * mix(1.0, 0.52, phase) * mix(1.0, flow, aKind);
+        vColor = aColor;
+        vKind = aKind;
+        vDepth = p.z;
+        vPath = -aPosition.y;
       }`;
     const fragment = `
       precision mediump float;
-      varying vec3 vColor;
+      uniform mediump float uTime;
+      varying mediump vec3 vColor;
+      varying mediump float vKind, vDepth, vPath;
       void main() {
-        float d = length(gl_PointCoord - vec2(0.5));
-        if (d > 0.5) discard;
-        float light = 1.0 - smoothstep(0.12, 0.5, d) * 0.55;
-        gl_FragColor = vec4(vColor * light, 1.0);
+        if (vKind < 0.5) {
+          float d = length(gl_PointCoord - vec2(0.5));
+          if (d > 0.5) discard;
+          gl_FragColor = vec4(vColor * (1.0 - smoothstep(0.12, 0.5, d) * 0.4), 1.0);
+        } else {
+          float band = pow(max(0.0, cos(vPath * 4.5 - uTime * 2.8)), 22.0);
+          float rim = 0.90 + 0.14 * clamp(vDepth + 0.5, 0.0, 1.0);
+          vec3 lit = vColor * rim * (1.0 + band * 0.8);
+          lit += vec3(0.23, 0.16, 0.13) * band;
+          gl_FragColor = vec4(lit, 1.0);
+        }
       }`;
     function shader(type, source) {
       const item = gl.createShader(type); gl.shaderSource(item, source); gl.compileShader(item);
@@ -153,29 +178,36 @@
         red ? g * .85 : g * .95, red ? b * .85 : Math.min(1, b * 1.13), seed, 0);
     }
     // Connected cubic tubes. Radius decreases at each junction, from aorta to microvessels.
-    const rings = stride === 2 ? 6 : 9;
-    const mixPoint = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
+    const heartCount = vertices.length / 8;
+    const rings = stride === 2 ? 8 : 12;
     function tube(a, b, c, d, radius, endRadius, blue = false) {
       const length = Math.hypot(...d.map((v, i) => v - a[i]));
-      const samples = Math.max(12, Math.ceil(length / (stride === 2 ? .045 : .03)));
+      const samples = Math.max(8, Math.ceil(length / (stride === 2 ? .09 : .07)));
+      const surface = [];
       for (let j = 0; j <= samples; j++) {
         const t = j / samples, s = 1 - t;
         const center = a.map((v, i) => s*s*s*v + 3*s*s*t*b[i] + 3*s*t*t*c[i] + t*t*t*d[i]);
         const dx = 3*s*s*(b[0]-a[0])+6*s*t*(c[0]-b[0])+3*t*t*(d[0]-c[0]);
         const dy = 3*s*s*(b[1]-a[1])+6*s*t*(c[1]-b[1])+3*t*t*(d[1]-c[1]);
         const norm = Math.hypot(dx, dy) || 1;
-        const r = radius + (endRadius - radius) * t;
+        const r = Math.max(.0035, (radius + (endRadius - radius) * t) * 1.65);
         for (let k = 0; k < rings; k++) {
           const theta = k / rings * Math.PI * 2, side = Math.cos(theta), front = Math.sin(theta);
-          const light = .5 + .5 * Math.max(0, front);
-          const color = blue ? [.23, .41, .72] : [.96, .31, .23];
-          vertices.push(center[0] - dy / norm * side * r, center[1] + dx / norm * side * r,
-            center[2] + front * r, ...color.map(v => v * light), t, 1);
+          const light = .22 + .68 * Math.max(0, front * .85 - side * .5) + .42 * Math.pow(Math.max(0, front * .95 - side * .3), 18);
+          const color = blue ? [.22, .65, .98] : [1.0, .32, .22];
+          surface.push([center[0] - dy / norm * side * r, center[1] + dx / norm * side * r,
+            center[2] + front * r, ...color.map(v => v * light), t, 1]);
         }
+      }
+      // A connected, shaded surface instead of isolated dots.
+      for (let j = 0; j < samples; j++) for (let k = 0; k < rings; k++) {
+        const a0 = j * rings + k, a1 = j * rings + (k + 1) % rings;
+        const b0 = a0 + rings, b1 = a1 + rings;
+        for (const index of [a0, b0, a1, a1, b0, b1]) vertices.push(...surface[index]);
       }
     }
     function branch(start, direction, length, radius, depth, blue) {
-      const end = [start[0] + direction * length * .55, start[1] - length, start[2] - .035];
+      const end = [start[0] + direction * length * .55, start[1] - length, start[2] + (blue ? -.14 : .14) * length];
       const b = [start[0] + direction * length * .4, start[1] - length * .18, start[2]];
       const c = [end[0] - direction * length * .12, end[1] + length * .35, end[2]];
       tube(start, b, c, end, radius, radius * .58, blue);
@@ -227,11 +259,13 @@
         gl.uniform1f(uniforms.uAspect, width / height);
         const phase = ramp(camera, 0, 3);
         gl.uniform1f(uniforms.uJourney, camera);
-        gl.uniform1f(uniforms.uScale, origin.height / height);
-        gl.uniform2f(uniforms.uOrigin, (origin.x + (.55 - origin.x) * phase) * 2 - 1,
+        gl.uniform1f(uniforms.uScale, origin.height / height + (Math.max(.76, origin.height / height) - origin.height / height) * phase);
+        const destination = width > 1050 ? .82 : .64;
+        gl.uniform2f(uniforms.uOrigin, (origin.x + (destination - origin.x) * phase) * 2 - 1,
           1 - (origin.y + (.5 - origin.y) * phase) * 2);
         gl.uniform1f(uniforms.uSize, Math.max(1.2, origin.height / 320 * stride * .78) * pixelRatio);
-        gl.drawArrays(gl.POINTS, 0, data.length / 8);
+        gl.drawArrays(gl.POINTS, 0, heartCount);
+        gl.drawArrays(gl.TRIANGLES, heartCount, data.length / 8 - heartCount);
       }
     };
   }
@@ -245,8 +279,8 @@
   }
   addEventListener('scroll', () => { readScroll(); requestFrame(); }, { passive: true });
   addEventListener('resize', () => { measure(); if (renderer && paused) renderer.draw(progress, clock, rotation, journey); requestFrame(); }, { passive: true });
-  stage.addEventListener('pointermove', e => { if (e.pointerType !== 'touch') pointer = clamp(e.clientX / innerWidth, 0, 1) * 2 - 1; }, { passive: true });
-  stage.addEventListener('pointerleave', () => { pointer = 0; });
+  addEventListener('pointermove', e => { if (e.pointerType !== 'touch') { pointer = clamp(e.clientX / innerWidth, 0, 1) * 2 - 1; requestFrame(); } }, { passive: true });
+  document.documentElement.addEventListener('pointerleave', () => { pointer = 0; requestFrame(); });
   toggle.addEventListener('click', () => {
     paused = !paused; toggle.setAttribute('aria-pressed', String(paused));
     toggle.innerHTML = paused ? 'Resume motion <span aria-hidden="true">▷</span>' : 'Pause motion <span aria-hidden="true">Ⅱ</span>';
