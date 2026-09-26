@@ -70,10 +70,10 @@ if ("IntersectionObserver" in window) {
   const so = new IntersectionObserver((es) => es.forEach((e) => {
     if (!e.isIntersecting) return;
     so.unobserve(e.target);
-    const el = e.target, n = +el.dataset.count;
+    const el = e.target, n = +el.dataset.count, suffix = el.dataset.suffix || "";
     if (reduced) return;
     const t0 = performance.now();
-    const step = (t) => { const k = Math.min(1, (t - t0) / 1400); el.textContent = Math.round(n * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(step); };
+    const step = (t) => { const k = Math.min(1, (t - t0) / 1400); el.textContent = Math.round(n * (1 - Math.pow(1 - k, 3))) + suffix; if (k < 1) requestAnimationFrame(step); };
     requestAnimationFrame(step);
   }), { threshold: 0.6 });
   $$("[data-count]").forEach((el) => so.observe(el));
