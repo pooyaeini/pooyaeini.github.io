@@ -4,7 +4,9 @@ An interactive, scroll-driven 3D journey through the cardiovascular system (whol
 great vessels, pulmonary microcirculation, arterial lumen, atherosclerosis, thrombosis), with each
 chapter holding the research whose clinical question lives at that anatomical scale.
 
-Static site, no build step. Deploys as is on Vercel or GitHub Pages.
+Static site, no build step beyond `build.mjs`, which packages the public files into `dist/`.
+Production is https://pooya-eini.vercel.app; pushes to `main` deploy automatically through the
+Vercel Git integration, and other branches get preview deployments.
 
 - `index.html` · page structure and chapter copy
 - `styles.css` · dark theme and layout
