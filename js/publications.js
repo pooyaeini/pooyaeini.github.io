@@ -6,6 +6,30 @@
  */
 export const PUBLICATIONS = [
   {
+    year: 2026, territory: "heart", role: "first", topic: "Valvular disease",
+    title: "Explainable machine learning and unsupervised anatomical phenotyping of mitral valve prolapse in patients with severe mitral regurgitation",
+    authors: "Eini P, Serpoush H, Rezayee M",
+    journal: "BMC Cardiovascular Disorders", cite: "2026", doi: "10.1186/s12872-026-06331-5",
+  },
+  {
+    year: 2026, territory: "heart", role: "first", topic: "Electrocardiography",
+    title: "Machine-learning prediction of cardiovascular diagnoses from pediatric ECG reports in 11 643 children",
+    authors: "Eini P, Serpoush H, Rezayee M, Tremblay J",
+    journal: "BMC Pediatrics", cite: "2026", doi: "10.1186/s12887-026-07732-3",
+  },
+  {
+    year: 2025, territory: "heart", role: "co", topic: "Cardiomyopathy",
+    title: "Regulatory pathways of long non-coding RNAs and microRNAs in sepsis-induced cardiomyopathy",
+    authors: "Eini P, Eini P, Amini NB, Farzan P, Etemady K",
+    journal: "Discover Medicine", cite: "2025;2:289", doi: "10.1007/s44337-025-00530-3",
+  },
+  {
+    year: 2026, territory: "pulmonary", role: "first", topic: "Pulmonary embolism",
+    title: "Diagnostic accuracy of machine-learning models for detecting pulmonary embolism in patients with pneumonia: a systematic review and meta-analysis",
+    authors: "Eini P, Eini P, Serpoush H, et al.",
+    journal: "BMC Pulmonary Medicine", cite: "2026", doi: "10.1186/s12890-026-04583-7",
+  },
+  {
     year: 2026, territory: "heart", role: "cofirst", topic: "Valvular disease",
     title: "CT mitral valve calcium score and immediate outcomes after percutaneous transvenous mitral commissurotomy",
     authors: "Eini P, Ghaffari Jolfayi A, Firouzi A, et al.",
@@ -51,7 +75,7 @@ export const PUBLICATIONS = [
     year: 2025, territory: "heart", role: "co", topic: "Ventricular function",
     title: "Impact of lead placement site on right ventricular function: a comparative echocardiographic analysis of apical versus septal pacing in permanent pacemaker recipients",
     authors: "Ariannia R, Badkoubi A, Shirini D, et al., Eini P, et al.",
-    journal: "American Journal of Cardiovascular Disease", cite: "2025", doi: "10.62347/AMNY1624",
+    journal: "American Journal of Cardiovascular Disease", cite: "2025;15(5):308-318", doi: "10.62347/AMNY1624",
   },
   {
     year: 2025, territory: "heart", role: "co", topic: "Cardiac surgery",
@@ -133,11 +157,22 @@ export const PUBLICATIONS = [
     year: 2026, territory: "athero", role: "co", topic: "Atherogenesis",
     title: "Monocytes in HIV associated atherosclerosis: A review of pathogenesis and clinical implications",
     authors: "Eini P, Eini P, Pourhemmati S, Yousefimoghaddam F, Taherkhani A, Yahya R",
-    journal: "Caspian Journal of Internal Medicine", cite: "2026;17(1)", doi: "10.22088/cjim.17.1.1",
+    journal: "Caspian Journal of Internal Medicine", cite: "2026;17(1):1-13", doi: "10.22088/cjim.17.1.1",
   },
 ];
 
-export const UNDER_REVIEW = [];
+export const IN_PRESS = [
+  {
+    territory: "heart", status: "In press",
+    title: "Prevalence, risk factors, and outcomes of infective endocarditis in people living with HIV: a systematic review and meta-analysis",
+    journal: "Caspian Journal of Internal Medicine",
+  },
+  {
+    territory: "athero", status: "Accepted",
+    title: "The gut-heart axis in acute coronary syndromes: a systematic review of gut microbiota, metabolites, and systemic markers",
+    journal: "Journal of Lipid and Atherosclerosis",
+  },
+];
 
 export const TERRITORIES = {
   heart: "Heart",

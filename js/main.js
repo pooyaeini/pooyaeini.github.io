@@ -1,5 +1,5 @@
 /* Pooya Eini, MD: page behavior, publication rendering, and the bridge to the 3D journey. */
-import { PUBLICATIONS, UNDER_REVIEW, TERRITORIES } from "./publications.js";
+import { PUBLICATIONS, IN_PRESS, TERRITORIES } from "./publications.js";
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
@@ -29,13 +29,13 @@ const byDate = (a, b) => b.year - a.year || (a.role === "co") - (b.role === "co"
 $$(".papers").forEach((ol) => {
   const t = ol.dataset.territory;
   ol.innerHTML = PUBLICATIONS.filter((p) => p.territory === t).sort(byDate).map((p) => pubItem(p, true)).join("");
-  const ur = UNDER_REVIEW.filter((p) => p.territory === t);
-  if (ur.length) ol.insertAdjacentHTML("beforeend", ur.map((p) => `<li class="pub pub--review"><span class="pub__year">Under review</span><div class="pub__body"><h4 class="pub__title">${esc(p.title)}</h4></div></li>`).join(""));
+  const ip = IN_PRESS.filter((p) => p.territory === t);
+  if (ip.length) ol.insertAdjacentHTML("beforeend", ip.map((p) => `<li class="pub pub--review"><span class="pub__year">${p.status}</span><div class="pub__body"><h4 class="pub__title">${esc(p.title)}</h4><p class="pub__meta"><em>${esc(p.journal)}</em></p></div></li>`).join(""));
 });
 const index = $("#pubIndex");
 index.innerHTML = PUBLICATIONS.slice().sort(byDate).map((p) => pubItem(p, false)).join("");
-$("#underReview").innerHTML = UNDER_REVIEW.map((p) => `<li><span>${TERRITORIES[p.territory]}</span>${esc(p.title)}</li>`).join("");
-$(".review").hidden = !UNDER_REVIEW.length;
+$("#inPress").innerHTML = IN_PRESS.map((p) => `<li><span>${p.status} · ${esc(p.journal)} · ${TERRITORIES[p.territory]}</span>${esc(p.title)}</li>`).join("");
+$(".review").hidden = !IN_PRESS.length;
 
 let terr = "all", topic = null;
 function applyFilter() {
