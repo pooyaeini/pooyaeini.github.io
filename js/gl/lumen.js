@@ -369,7 +369,7 @@ export function createLumen({ mobile, reduced }) {
         const r = Math.max(0, lr - 0.1) * c.rf;
         tmp.copy(P).addScaledVector(N, Math.cos(c.th) * r).addScaledVector(B, Math.sin(c.th) * r);
         q.setFromAxisAngle(c.axis, c.ang);
-        m4.compose(tmp, q, sc.setScalar(1));
+        m4.compose(tmp, q, sc.setScalar(tmp.distanceToSquared(camera.position) < 0.1 ? 0 : 1));
         rbc.setMatrixAt(i, m4);
       }
       rbc.instanceMatrix.needsUpdate = true;
@@ -383,7 +383,7 @@ export function createLumen({ mobile, reduced }) {
         const r = Math.max(0, lr - 0.06) * c.rf;
         tmp.copy(P).addScaledVector(N, Math.cos(c.th) * r).addScaledVector(B, Math.sin(c.th) * r);
         q.setFromAxisAngle(c.axis, c.ang);
-        m4.compose(tmp, q, sc.setScalar(1));
+        m4.compose(tmp, q, sc.setScalar(tmp.distanceToSquared(camera.position) < 0.1 ? 0 : 1));
         plt.setMatrixAt(i, m4);
       }
       plt.instanceMatrix.needsUpdate = true;

@@ -2,9 +2,15 @@
  * Cardiovascular publication record, organized by anatomical territory.
  * Bibliographic details verified against PubMed (September 2026).
  * territory: heart | vessels | pulmonary | athero
- * role: first | co
+ * role: first | cofirst | co
  */
 export const PUBLICATIONS = [
+  {
+    year: 2026, territory: "heart", role: "cofirst", topic: "Valvular disease",
+    title: "CT mitral valve calcium score and immediate outcomes after percutaneous transvenous mitral commissurotomy",
+    authors: "Eini P, Ghaffari Jolfayi A, Firouzi A, et al.",
+    journal: "BMC Medical Imaging", cite: "2026", doi: "10.1186/s12880-026-02843-w",
+  },
   {
     year: 2026, territory: "heart", role: "first", topic: "Valvular disease",
     title: "Diagnostic Performance of Artificial Intelligence in Evaluating Tricuspid Regurgitation: A Systematic Review and Meta-Analysis",
@@ -118,10 +124,10 @@ export const PUBLICATIONS = [
     journal: "Clinical Cardiology", cite: "2026;49(7):e70423", doi: "10.1002/clc.70423",
   },
   {
-    year: 2026, territory: "athero", role: "co", topic: "Coronary artery disease",
+    year: 2026, territory: "athero", role: "cofirst", topic: "Coronary artery disease",
     title: "Left main coronary artery stenosis assessment on coronary CT angiography",
     authors: "Zahedi M, Eini P, Alemzadeh-Ansari MJ, Motevalli M, Fallah Najmabadi A, Houshmand G",
-    journal: "European Journal of Radiology Open", cite: "2026", doi: "10.1016/j.ejro.2026.100803",
+    journal: "European Journal of Radiology Open", cite: "2026;17:100803", doi: "10.1016/j.ejro.2026.100803",
   },
   {
     year: 2026, territory: "athero", role: "co", topic: "Atherogenesis",
@@ -131,9 +137,7 @@ export const PUBLICATIONS = [
   },
 ];
 
-export const UNDER_REVIEW = [
-  { territory: "heart", title: "CT Mitral Valve Calcium Score and Immediate Outcomes After Percutaneous Transvenous Mitral Commissurotomy" },
-];
+export const UNDER_REVIEW = [];
 
 export const TERRITORIES = {
   heart: "Heart",

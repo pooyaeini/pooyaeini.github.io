@@ -12,7 +12,7 @@ const linkOf = (p) => p.url || (p.doi ? `https://doi.org/${p.doi}` : null);
 function pubItem(p, compact) {
   const href = linkOf(p);
   const title = href ? `<a href="${href}" target="_blank" rel="noopener">${esc(p.title)}</a>` : esc(p.title);
-  const role = p.role === "first" ? `<span class="tag tag--first">First author</span>` : `<span class="tag">Co-author</span>`;
+  const role = p.role === "first" ? `<span class="tag tag--first">First author</span>` : p.role === "cofirst" ? `<span class="tag tag--first">Co-first author</span>` : `<span class="tag">Co-author</span>`;
   const cited = p.cited ? `<span class="tag tag--cite">Cited by ${p.cited}</span>` : "";
   const authors = compact ? "" : `<p class="pub__authors">${esc(p.authors)}</p>`;
   return `<li class="pub" data-t="${p.territory}" data-role="${p.role}" data-topic="${esc(p.topic)}">
@@ -25,7 +25,7 @@ function pubItem(p, compact) {
     </div>
   </li>`;
 }
-const byDate = (a, b) => b.year - a.year || (a.role === "first" ? -1 : 1);
+const byDate = (a, b) => b.year - a.year || (a.role === "co") - (b.role === "co");
 $$(".papers").forEach((ol) => {
   const t = ol.dataset.territory;
   ol.innerHTML = PUBLICATIONS.filter((p) => p.territory === t).sort(byDate).map((p) => pubItem(p, true)).join("");
@@ -35,12 +35,13 @@ $$(".papers").forEach((ol) => {
 const index = $("#pubIndex");
 index.innerHTML = PUBLICATIONS.slice().sort(byDate).map((p) => pubItem(p, false)).join("");
 $("#underReview").innerHTML = UNDER_REVIEW.map((p) => `<li><span>${TERRITORIES[p.territory]}</span>${esc(p.title)}</li>`).join("");
+$(".review").hidden = !UNDER_REVIEW.length;
 
 let terr = "all", topic = null;
 function applyFilter() {
   const first = $("#firstOnly").checked;
   $$(".pub", index).forEach((li) => {
-    const ok = (terr === "all" || li.dataset.t === terr) && (!first || li.dataset.role === "first") && (!topic || li.dataset.topic === topic);
+    const ok = (terr === "all" || li.dataset.t === terr) && (!first || li.dataset.role !== "co") && (!topic || li.dataset.topic === topic);
     li.hidden = !ok;
   });
   $$("#terrFilter .chipbtn").forEach((b) => b.classList.toggle("is-on", b.dataset.f === terr));
@@ -53,7 +54,7 @@ const topics = {};
 for (const p of PUBLICATIONS) (topics[p.topic] ||= { n: 0, t: p.territory }).n++;
 $("#atlas").innerHTML = Object.entries(topics)
   .sort((a, b) => b[1].n - a[1].n)
-  .map(([k, v]) => `<li><button data-topic="${esc(k)}" data-t="${v.t}"><span class="atlas__n">${String(v.n).padStart(2, "0")}</span><span class="atlas__k">${esc(k)}</span><span class="atlas__t">${TERRITORIES[v.t]}</span></button></li>`)
+  .map(([k, v]) => `<li><button data-topic="${esc(k)}" data-t="${v.t}"><span class="atlas__k">${esc(k)}</span><span class="atlas__t">${TERRITORIES[v.t]}</span></button></li>`)
   .join("");
 $$("#atlas button").forEach((b) => b.addEventListener("click", () => {
   terr = b.dataset.t; topic = b.dataset.topic; $("#firstOnly").checked = false;
